@@ -1,0 +1,295 @@
+limit_ip.patch для apache_1.3.14
+
+Добавляет два конфигурационных параметра:
+
+MaxServersPerIP     - устанавливает максимальное количество запросов,
+                      обслуживаемых с одного IP
+MaxServersPerIPRead - устанавливает максимальное количество запросов
+                      с одного IP, которые находятся в состоянии чтения
+
+Представляет из себя слегка измененный патч
+http_patch с http://www.shutoff.spb.ru/apache_patch.html
+Изменения связаны только с возможностью примения к apache_1.3.14
+
+Накладывать так:
+patch -d apache_1.3.14 -l -p1 < limit_ip.patch
+
+diff -ur apache_1.3.9rusPL28.20/src/include/http_conf_globals.h apache_1.3.9rusPL28.20-patch/src/include/http_conf_globals.h
+--- apache_1.3.9rusPL28.20/src/include/http_conf_globals.h	Sat Aug 21 02:44:56 1999
++++ apache_1.3.9rusPL28.20-patch/src/include/http_conf_globals.h	Tue Sep 21 17:34:52 1999
+@@ -86,6 +86,8 @@
+ extern int ap_daemons_limit;
+ extern MODULE_VAR_EXPORT int ap_suexec_enabled;
+ extern int ap_listenbacklog;
++extern int ap_daemons_max_by_ip;
++extern int ap_daemons_max_by_ip_read;
+ extern int ap_dump_settings;
+ extern API_VAR_EXPORT int ap_extended_status;
+ 
+diff -ur apache_1.3.9rusPL28.20/src/include/http_main.h apache_1.3.9rusPL28.20-patch/src/include/http_main.h
+--- apache_1.3.9rusPL28.20/src/include/http_main.h	Thu Jan 14 12:39:26 1999
++++ apache_1.3.9rusPL28.20-patch/src/include/http_main.h	Tue Sep 21 17:34:53 1999
+@@ -127,6 +127,9 @@
+ unsigned int ap_set_callback_and_alarm(void (*fn) (int), int x);
+ API_EXPORT(int) ap_check_alarm(void);
+ 
++void update_child_status_remote_ip (int, conn_rec *);
++int count_connections (conn_rec *, int);
++
+ #ifndef NO_OTHER_CHILD
+ /*
+  * register an other_child -- a child which the main loop keeps track of
+diff -ur apache_1.3.9rusPL28.20/src/include/httpd.h apache_1.3.9rusPL28.20-patch/src/include/httpd.h
+--- apache_1.3.9rusPL28.20/src/include/httpd.h	Thu Sep  2 22:59:02 1999
++++ apache_1.3.9rusPL28.20-patch/src/include/httpd.h	Tue Sep 21 17:34:53 1999
+@@ -297,6 +297,12 @@
+ #define DEFAULT_MIN_FREE_DAEMON 5
+ #endif
+ 
++/* Define default limits for MaxDaemons serving a single address */
++
++#define DEFAULT_MAX_DAEMONS_BY_IP 150
++#define DEFAULT_MAX_DAEMONS_BY_IP_READ 75
++#define LIMIT_CONNECTIONS_BY_IP_ERROR HTTP_SERVICE_UNAVAILABLE
++
+ /* Limit on the total --- clients will be locked out if more servers than
+  * this are needed.  It is intended solely to keep the server from crashing
+  * when things get out of hand.
+diff -ur apache_1.3.9rusPL28.20/src/include/scoreboard.h apache_1.3.9rusPL28.20-patch/src/include/scoreboard.h
+--- apache_1.3.9rusPL28.20/src/include/scoreboard.h	Sat Aug 21 02:45:00 1999
++++ apache_1.3.9rusPL28.20-patch/src/include/scoreboard.h	Tue Sep 21 17:34:53 1999
+@@ -159,9 +159,11 @@
+     char request[64];		/* We just want an idea... */
+     server_rec *vhostrec;	/* What virtual host is being accessed? */
+                                 /* SEE ABOVE FOR SAFE USAGE! */
+ #ifdef MOD_DEFLATE_IDLE
+     int  deflate;
+ #endif
++
++    unsigned long remoteip;
+ } short_score;
+ 
+ typedef struct {
+diff -ur apache_1.3.9rusPL28.20/src/main/http_config.c apache_1.3.9rusPL28.20-patch/src/main/http_config.c
+--- apache_1.3.9rusPL28.20/src/main/http_config.c	Sat Aug 21 02:45:03 1999
++++ apache_1.3.9rusPL28.20-patch/src/main/http_config.c	Tue Sep 21 17:34:53 1999
+@@ -1399,6 +1399,8 @@
+     ap_daemons_to_start = DEFAULT_START_DAEMON;
+     ap_daemons_min_free = DEFAULT_MIN_FREE_DAEMON;
+     ap_daemons_max_free = DEFAULT_MAX_FREE_DAEMON;
++    ap_daemons_max_by_ip = DEFAULT_MAX_DAEMONS_BY_IP;
++    ap_daemons_max_by_ip_read = DEFAULT_MAX_DAEMONS_BY_IP_READ;
+     ap_daemons_limit = HARD_SERVER_LIMIT;
+     ap_pid_fname = DEFAULT_PIDLOG;
+     ap_scoreboard_fname = DEFAULT_SCOREBOARD;
+diff -ur apache_1.3.9rusPL28.20/src/main/http_core.c apache_1.3.9rusPL28.20-patch/src/main/http_core.c
+--- apache_1.3.9rusPL28.20/src/main/http_core.c	Sat Aug 21 02:45:03 1999
++++ apache_1.3.9rusPL28.20-patch/src/main/http_core.c	Tue Sep 21 17:34:53 1999
+@@ -2182,6 +2182,16 @@
+     return NULL;
+ }
+ 
++const char * set_max_servers_by_ip (cmd_parms *cmd, void *dummy, char *arg) {
++    ap_daemons_max_by_ip = atoi (arg);
++    return NULL;
++}
++
++const char * set_max_servers_by_ip_read (cmd_parms *cmd,void *dummy,char *arg) {
++    ap_daemons_max_by_ip_read = atoi (arg);
++    return NULL;
++}
++
+ static const char *set_min_free_servers(cmd_parms *cmd, void *dummy, char *arg)
+ {
+     const char *err = ap_check_cmd_context(cmd, GLOBAL_ONLY);
+@@ -2852,6 +2862,10 @@
+   "Maximum number of idle children" },
+ { "MaxServers", set_max_free_servers, NULL, RSRC_CONF, TAKE1,
+   "Deprecated equivalent to MaxSpareServers" },
++{ "MaxServersPerIP", set_max_servers_by_ip, NULL, RSRC_CONF, TAKE1,
++  "Maximum number of connections from a single IP address" },
++{ "MaxServersPerIPRead", set_max_servers_by_ip_read, NULL, RSRC_CONF, TAKE1,
++  "Maximum number of connection from a single IP address in read state at any time." },
+ { "ServersSafetyLimit", set_server_limit, NULL, RSRC_CONF, TAKE1,
+   "Deprecated equivalent to MaxClients" },
+ { "MaxClients", set_server_limit, NULL, RSRC_CONF, TAKE1,
+diff -ur apache_1.3.9rusPL28.20/src/main/http_main.c apache_1.3.9rusPL28.20-patch/src/main/http_main.c
+--- apache_1.3.9rusPL28.20/src/main/http_main.c	Sat Aug 21 02:45:05 1999
++++ apache_1.3.9rusPL28.20-patch/src/main/http_main.c	Tue Sep 21 17:37:07 1999
+@@ -249,6 +249,8 @@
+ API_VAR_EXPORT int ap_daemons_to_start=0;
+ API_VAR_EXPORT int ap_daemons_min_free=0;
+ API_VAR_EXPORT int ap_daemons_max_free=0;
++API_VAR_EXPORT int ap_daemons_max_by_ip;
++API_VAR_EXPORT int ap_daemons_max_by_ip_read;
+ API_VAR_EXPORT int ap_daemons_limit=0;
+ time_t ap_restart_time=0;
+ API_VAR_EXPORT int ap_suexec_enabled = 0;
+@@ -2183,6 +2185,38 @@
+     return old_status;
+ }
+ 
++void update_child_status_remote_ip (int child_num, conn_rec * current_conn)
++{
++    int slot_size;
++    short_score new_score_rec;
++
++    if (child_num < 0) { return; }
++
++printf("update ip %u\n", current_conn->remote_addr.sin_addr.s_addr);
++
++    ap_sync_scoreboard_image();
++    new_score_rec = ap_scoreboard_image->servers[child_num];
++
++    slot_size = sizeof(new_score_rec.remoteip) - 1;
++
++    if (current_conn)
++    {
++        new_score_rec.remoteip = current_conn->remote_addr.sin_addr.s_addr;
++    }
++    else
++    {
++        new_score_rec.remoteip = 0;
++    }
++#if defined(HAVE_MMAP) || defined(HAVE_SHMGET)
++    memcpy(&ap_scoreboard_image->servers[child_num], &new_score_rec, sizeof new_score_rec);
++#else
++    lseek (scoreboard_fd, (long)child_num * sizeof(short_score), 0);
++    force_write (scoreboard_fd, (char*)&new_score_rec, sizeof(short_score));
++#endif
++
++    ap_sync_scoreboard_image();
++}
++
+ static void update_scoreboard_global(void)
+ {
+ #ifdef SCOREBOARD_FILE
+@@ -2193,6 +2227,26 @@
+ #endif
+ }
+ 
++int count_connections (conn_rec * current_conn, int state)
++{
++    unsigned long remote_ip = current_conn->remote_addr.sin_addr.s_addr;
++    int res = 0, i;
++
++    for (i = 0; i < HARD_SERVER_LIMIT; i++)
++    {
++        if ((ap_scoreboard_image->servers[i].status == SERVER_DEAD) ||
++            (state > 0 && ap_scoreboard_image->servers[i].status != state))
++        {
++            continue;
++        }
++        if (ap_scoreboard_image->servers[i].remoteip == remote_ip)
++        {
++            res++;
++        }
++    }
++    return res;
++}
++
+ void ap_time_process_request(int child_num, int status)
+ {
+     short_score *ss;
+@@ -4021,12 +4075,15 @@
+ 	 * until no requests are left or we decide to close.
+ 	 */
+ 
+-	while ((r = ap_read_request(current_conn)) != NULL) {
++        for (;;){
++             if (ap_daemons_max_by_ip || ap_daemons_max_by_ip_read)
++                 update_child_status_remote_ip (my_child_num, (conn_rec *)current_conn);
++
++	     if ((r = ap_read_request(current_conn)) == NULL) break;
+ 
+ 	    /* read_request_line has already done a
+ 	     * signal (SIGUSR1, SIG_IGN);
+ 	     */
+-
+ 	    (void) ap_update_child_status(my_child_num, SERVER_BUSY_WRITE, r);
+ 
+ 	    /* process the request if it was read without error */
+@@ -5248,6 +5305,9 @@
+ 	 * until no requests are left or we decide to close.
+ 	 */
+-	while ((r = ap_read_request(current_conn)) != NULL) {
++	for (;;){
++            if (daemons_max_by_ip || daemons_max_by_ip_read)
++                    update_child_status_remote_ip (child_num, (conn_rec *)current_conn);
++	    if ((r = ap_read_request(current_conn)) == NULL) break;
+ 	    (void) ap_update_child_status(child_num, SERVER_BUSY_WRITE, r);
+ 
+ 	    if (r->status == HTTP_OK)
+@@ -5273,6 +5333,10 @@
+ 	 * client has ACKed our FIN and/or has stopped sending us data.
+ 	 */
+ 	ap_kill_cleanups_for_socket(ptrans, csd);
++
++        if (daemons_max_by_ip || daemons_max_by_ip_read)
++            update_child_status_remote_ip (child_num, (conn_rec *)NULL);
++
+ 
+ #ifdef NO_LINGCLOSE
+ 	ap_bclose(conn_io);	/* just close it */
+diff -ur apache_1.3.9rusPL28.20/src/main/http_protocol.c apache_1.3.9rusPL28.20-patch/src/main/http_protocol.c
+--- apache_1.3.9rusPL28.20/src/main/http_protocol.c	Thu Sep  2 22:59:02 1999
++++ apache_1.3.9rusPL28.20-patch/src/main/http_protocol.c	Tue Sep 21 17:34:55 1999
+@@ -73,6 +73,15 @@
+ #include "http_log.h"           /* For errors detected in basic auth common
+                                  * support code... */
+ #include "util_date.h"          /* For parseHTTPdate and BAD_DATE */
++
++#include "scoreboard.h"         /* for limiting connections by IP */
++#ifndef LONG_STRING_LEN
++#define LONG_STRING_LEN 2048
++#endif /* LONG_STRING_LEN */
++extern int ap_daemons_max_by_ip;
++extern int ap_daemons_max_by_ip_read;
++extern void ap_die();
++
+ #include <stdarg.h>
+ #include "http_conf_globals.h"
+ 
+@@ -935,6 +944,8 @@
+     pool *p;
+     const char *expect;
+     int access_status;
++    int current_connections;
++    char *reject_state = NULL;
+ 
+     p = ap_make_sub_pool(conn->pool);
+     r = ap_pcalloc(p, sizeof(request_rec));
+@@ -966,6 +977,33 @@
+     r->read_length     = 0;
+     r->read_body       = REQUEST_NO_BODY;
+ 
++    if (ap_daemons_max_by_ip && ((current_connections = count_connections(conn,0))
++                              > ap_daemons_max_by_ip))
++    {
++        r->request_time=time(NULL);
++	reject_state = "total";
++    }
++    else if (ap_daemons_max_by_ip_read &&
++             ((current_connections = count_connections(conn,SERVER_BUSY_READ))
++              > ap_daemons_max_by_ip_read))
++    {
++	reject_state = "read state";
++    }
++    if (reject_state) {
++        r->status        = HTTP_OK;
++        r->request_time  = time(NULL);
++        r->proto_num     = 1000;       /* or something */
++        r->assbackwards  = 0;          /* who knows... */
++        r->protocol      = "HTTP/1.0"; /* just not empty */
++        r->the_request   = NULL;
++        r->method        = NULL;
++        r->method_number = M_INVALID;
++        ap_die(LIMIT_CONNECTIONS_BY_IP_ERROR, r);
++        ap_log_transaction(r);
++        ap_log_error(APLOG_MARK, APLOG_ERR | APLOG_NOERRNO, conn->server, "Client at %s for %s with %d %s current connections", conn->remote_ip, conn->server->server_hostname, current_connections, reject_state); 
++        return NULL;
++    }
++   
+     r->status          = HTTP_REQUEST_TIME_OUT;  /* Until we get a request */
+     r->the_request     = NULL;
+ 

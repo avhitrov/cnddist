@@ -1,0 +1,11 @@
+--- mp_region_old.c	Fri Dec 29 16:26:15 2000
++++ mp_region.c	Fri Dec 29 16:26:13 2000
+@@ -160,7 +160,7 @@
+ 	dbenv->mp_handle = dbmp;
+ 	return (0);
+ 
+-err:	if (dbmp->reginfo[0].addr != NULL) {
++err:	if (dbmp->reginfo && dbmp->reginfo[0].addr != NULL) {
+ 		if (F_ISSET(dbmp->reginfo, REGION_CREATE))
+ 			for (i = 0; i < dbmp->nreg; ++i)
+ 				if (dbmp->reginfo[i].id != REG_ID_INVALID)

@@ -1,0 +1,14 @@
+--- src/main/http_protocol.c	Fri Jun 21 13:01:56 2002
++++ src/main/http_protocol.c	Fri Jun 21 13:03:03 2002
+@@ -2050,6 +2050,11 @@
+ 
+         len_to_read = get_chunk_size(buffer);
+ 
++        if (len_to_read < 0) {
++            r->connection->keepalive = -1;
++            return -1;
++        }
++
+         if (len_to_read == 0) { /* Last chunk indicated, get footers */
+             if (r->read_body == REQUEST_CHUNKED_DECHUNK) {
+                 get_mime_headers(r);
