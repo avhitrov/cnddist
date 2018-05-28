@@ -1,0 +1,191 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html><head>
+<META name="Organization" content="Vienna University of Technology, Austria">
+<META name="Object-type" content="document">
+<META name="Description" content="Goodie Domain Service offers Open Source Software
+for the Austrian Educational Community.">
+<META name="Keywords" content="Open Source Software, Open-Source, OSS, freeware, free,
+shareware, linux, distribution, server, client, info system, service, mirror, Goodies, 
+education, Austrian accademic community, Austria, software store">
+<META NAME="ROBOTS" CONTENT="NOARCHIVE">
+<LINK REV="made" HREF="mailto:gd@tuwien.ac.at">
+<LINK REL="SHORTCUT ICON" HREF="/GDSLogo.ico">
+
+<!-- OAS SETUP begin -->
+<script language="JavaScript" type="text/javascript">
+<!--
+//configuration
+OAS_url ='http://austria1.adverserve.net//RealMedia/ads/';
+OAS_listpos = 'Top,Right1,Position1';
+OAS_query = '?';
+OAS_sitepage = 'gd.tuwien.ac.at';
+//end of configuration
+OAS_version = 10;
+OAS_rn = '001234567890'; OAS_rns = '1234567890';
+OAS_rn = new String (Math.random()); OAS_rns = OAS_rn.substring (2, 11);
+function OAS_NORMAL(pos) { 
+document.write('<A HREF="' + OAS_url + 'click_nx.ads/' + OAS_sitepage + '/1' + OAS_rns + '@' + OAS_listpos + '!' + pos + OAS_query + '" TARGET=_top>');
+document.write('<IMG SRC="' + OAS_url + 'adstream_nx.ads/' + OAS_sitepage + '/1' + OAS_rns + '@' + OAS_listpos + '!' + pos + OAS_query + '" BORDER=0 ALT="Click!"></A>');
+}
+//-->
+</script>
+<script language="JavaScript1.1" type="text/javascript">
+<!--
+OAS_version = 11;
+if (navigator.userAgent.indexOf('Mozilla/3') != -1)
+	OAS_version = 10;
+if (OAS_version >= 11)
+	document.write('<SC'+'RIPT LANGUAGE=JavaScript1.1 SRC="' + OAS_url + 'adstream_mjx.ads/' + OAS_sitepage + '/1' + OAS_rns + '@' + OAS_listpos + OAS_query + '"><\/SCRIPT>');
+//-->
+</script>
+<script language="JavaScript" type="text/javascript">
+<!-- 
+document.write('');
+function OAS_AD(pos) {
+	if (OAS_version >= 11 && typeof(OAS_RICH!='undefined'))
+OAS_RICH(pos);
+	else
+OAS_NORMAL(pos);
+}
+//-->
+</script>
+<!-- OAS SETUP end -->
+
+<title>Goodie Domain Service, 
+	Vienna Univ. of Technology, Austria</title>
+<style type="text/css">
+<!--
+TD { font-family : helvetica,lucida,arial; }
+TH { font-family : helvetica,lucida,arial; }
+
+.latest	{ font-family: helvetica,lucida,arial; 
+		font-size: x-small; font-weight: bold; }
+.stxt	{ font-family: helvetica,lucida,arial; 
+		font-size: small; font-weight: bold; }
+.sstxt	{ font-family: helvetica,lucida,arial; 
+		font-size: x-small; font-weight: bold; }
+fieldset.sponsors { width:120px; background-color:#FFFFFF; border:1px solid black; padding:1px; font-size:x-small; }
+fieldset.banner { width:468px; background-color:#FFFFFF; border:1px solid black; padding:1px; font-size:x-small; }
+fieldset.skyscraper { width:160px; background-color:#FFFFFF; border:1px solid black; padding:1px; font-size:x-small; }
+fieldset.button { width:120px; background-color:#FFFFFF; border:1px solid black; padding:1px; font-size:x-small; }
+-->
+</style>
+
+</head>
+<BODY	TEXT="#000000" BGCOLOR="#EEEEEE" 
+	LINK="#0030FF" VLINK="#aa0000" ALINK="#ff0000">
+<table border="0" width="100%"><tr><td>
+<table width="100%" border="0"  cellpadding="8" cellspacing="0">
+	<tr><td><table cellpadding="4" cellspacing="4"><tr>
+	<td>
+	<a href="/">
+	<img src="/icon/GDSHeader.jpg" border="0" alt="GDS Header">	
+	</a>
+	</td>
+	</tr></table></td>
+
+	<td align="left">
+	<table  ><tr align="center">
+	<td>
+	<a href="/donation.html">
+	<font size="-1">Your support<br> very appreciated<br>
+	<img src="/icon/donate-k.jpg" align="middle" alt="donate"></a>
+	<br>
+	<a href="/amazon" target="_blank">
+	also order here at<br>
+	<img src="/icon/logo/amazon.png" border="0" align="top" alt="Amazon"></a><br>
+	</font>
+	</td>
+	</tr>
+	</table>
+	</tr>
+</table>
+
+
+
+
+<table bgcolor="#eef6ff" width="100%" border="0" cellpadding="0" cellspacing="0">
+
+<tr><td>
+&nbsp; </td>
+<td align="right">
+<font size="-2">03. Dec 2014 19:33 </font>&nbsp;</td>
+</tr>
+<tr><td colspan="2" valign="top">
+	<img src="http://gd.tuwien.ac.at/icon/dot.gif"
+	width="100%" height="1" border="0"></td></tr>
+<tr><td colspan="2">
+	<img src="http://gd.tuwien.ac.at/icon/6699FF.gif" 
+	alt="---" width="100%" height="1" border="0"></td></tr>
+
+</table>
+</td></tr></table><table width="100%">
+	<tr><td align="center" valign="top"><table  width="120"> 
+        <tr><td>
+<table width="100%" border="0" bgcolor="999999" cellpadding="0" cellspacing="0">
+
+</table>
+</td></tr><tr><td>&nbsp;</td></tr></table></td>
+<td><table width="100%">
+<tr><td>
+
+<table><tr><td>
+<p align="right">
+<font size="-1" face="Helvetica">
+My Box said: "Install Win95 or better ..." So I installed Linux.
+<br>-- personal email</font>
+
+
+<h2>Hello from </h2>
+
+<h4>Diag: "Missing object, wrong URL ?"</h4>
+<table width="90%" bgcolor="#eeeeee" cellpadding="10"><tr><td>
+Your request for the object @  may be incorrect,
+the object has possibly been relocated or might actually be missing
+for some reason, hmmm ...<p>
+Sorry for the inconvenience.
+</td></tr></table>
+
+<h2><font color="#ff0000">Some Hot Hints</font></h2>
+<table width="90%" border="0" cellpadding="10"><tr>
+<td bgcolor="#ffffff">
+<font color="#ff0000">Also please take into acount that some releases / updates come and disappear faster than
+<br>
+you can eat your breakfast :-)
+<br>
+So always check the source place in case a release seems to
+be not available (anymore) :-)</font>
+
+</td></tr>
+<tr><td bgcolor="#eeeeee">As you're probably coming from
+a search engine offering older URL ref. 
+try also an URL without components in the path
+like <b>.../z0/..., .../z1/...</b> etc.<br>
+Example: insted of /zz2/infosys/servers/etc always use <b>/infosys/servers/etc</b>
+</td></tr></table>
+<p>
+Simply start from the top of <a href="http://gd.tuwien.ac.at/">GDS</a>.
+</td></tr></table>
+
+</td></tr>
+<tr><td>
+
+<img src="http://gd.tuwien.ac.at/icon/6699FF.gif" width="100%" height="2">
+<br>
+<table cellpadding="4">
+	<tr><td>
+	<font size=-2 face="arial,helvetica,sans-serif">
+	All goodies are offered AS IS with NO WARRANTY of any kind.
+	See
+	<a href="/disclaimer.html"45>Disclaimer</a>,
+	<a href="/privacy-policy.html">Privacy policy</a>,
+	<a href="/impressum.html">Impressum</a>,
+	Contact 
+	<a href="mailto:gd@tuwien.ac.at">Rudolf Ladner</a>
+</font></td></tr>
+</table>
+</td></tr>
+</table></td>
+</tr></table></body></html>
